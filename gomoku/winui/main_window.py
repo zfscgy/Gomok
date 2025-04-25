@@ -13,7 +13,7 @@ class GomokuUI(QMainWindow):
         self.board_size_px = board_size_px  # 棋盘大小（像素）
         self.cell_size = board_size_px // self.board.board_size  # 每个单元格的大小
         self.display_args = {
-            "main_padding": self.board_size_px * 0.05,
+            "main_padding": self.board_size_px * 0.02,
             "pawn_size": self.cell_size * 0.9
         }
 
@@ -25,6 +25,7 @@ class GomokuUI(QMainWindow):
             app.setFont(font)
 
         self.hover_pawn = None
+        self.pawns = []
 
         self.ai_players = []
         self.current_step = -1  # -1 means showing the last step. However, if in the replay mode, it could be from 0...max_step
@@ -33,8 +34,15 @@ class GomokuUI(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
+        """
+        初始化UI
+        * main_layout: 主布局
+            * board_view
+            * toolbar_layout
+                * slider_layout
+        """
         self.setWindowTitle("五子棋")
-        self.setMinimumSize(self.board_size_px * 1.8, self.board_size_px * 1.25)
+        self.setMinimumSize(self.board_size_px * 1.8, self.board_size_px * 1.05)
 
         # Create main widget and layout
         main_widget = QWidget()
@@ -46,7 +54,7 @@ class GomokuUI(QMainWindow):
         # 棋盘
         self.scene = QGraphicsScene()
         self.board_view = QGraphicsView(self.scene)
-        self.board_view.setFixedSize(self.board_size_px * 1.1, self.board_size_px * 1.1)
+        self.board_view.setFixedSize(self.board_size_px * 1.04, self.board_size_px * 1.04)
         self.board_view.setMouseTracking(True)  # 开启鼠标跟踪
         self.draw_board()
         
@@ -56,11 +64,12 @@ class GomokuUI(QMainWindow):
         toolbar_widget = QWidget()
         toolbar_layout = QVBoxLayout(toolbar_widget)
         toolbar_layout.setSpacing(10)  # Reduced spacing between elements
-        toolbar_widget.setFixedWidth(150)
+        toolbar_widget.setFixedWidth(self.board_size_px * 0.7)
         toolbar_widget.setFixedHeight(self.board_size_px * 0.4)  # Match the board height
 
         # Undo按钮
         self.undo_button = QPushButton("撤销一步")
+        self.undo_button.setMaximumWidth(self.cell_size * 2)
         self.undo_button.clicked.connect(self.undo)  # 定义这个方法来处理撤销
         self.undo_button.setMinimumHeight(self.cell_size * 0.6)  # Set minimum height
         toolbar_layout.addWidget(self.undo_button)
@@ -73,8 +82,12 @@ class GomokuUI(QMainWindow):
         self.replay_slider.setTickPosition(QSlider.TicksBelow)
         self.replay_slider.setTickInterval(1)
         # self.replay_slider.valueChanged.connect(self.handle_replay_slider_changed)
-        toolbar_layout.addWidget(QLabel("重播"))
         toolbar_layout.addWidget(self.replay_slider)
+        
+        slider_layout = QHBoxLayout()
+        slider_layout.addWidget(QPushButton("<"))
+        slider_layout.addWidget(QPushButton(">"))
+        toolbar_layout.addLayout(slider_layout)
 
         # Add stretch to push elements to the top
         toolbar_layout.addStretch()
@@ -146,12 +159,15 @@ class GomokuUI(QMainWindow):
 
     def update_pieces(self):
         """根据 Env 的状态更新棋子显示"""
+        for pawn in self.pawns:
+            self.scene.removeItem(pawn)
+        self.pawns.clear()
         for i in range(self.board.board_size):
             for j in range(self.board.board_size):
                 if self.board.get_board()[i, j] == 1:  # 黑棋
-                    self.draw_piece(i, j, Qt.black)
+                    self.pawns.append(self.draw_piece(i, j, Qt.black))
                 elif self.board.get_board()[i, j] == -1:  # 白棋
-                    self.draw_piece(i, j, Qt.white)
+                    self.pawns.append(self.draw_piece(i, j, Qt.white))
 
     def draw_piece(self, x: float, y: float, color: tuple):
         """绘制棋子"""
@@ -160,7 +176,6 @@ class GomokuUI(QMainWindow):
             self.display_args["pawn_size"], self.display_args["pawn_size"],
         )
         return self.scene.addEllipse(ellipse, QPen(Qt.black), QBrush(color))
-
 
 if __name__ == "__main__":
     app = QApplication([])

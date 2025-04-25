@@ -17,7 +17,8 @@ def get_gomoku_player(board_size: int) -> IntuitivePlayer:
         """
 
         state = torch.from_numpy(state)[None, None, :, :]
-        return torch.softmax(model(state)[0], dim=0).detach().numpy()
+        action_probs = torch.softmax(model(state)[0], dim=0) * (state == 0).float()  # (state == 0) 表示未落子位置
+        return action_probs.flatten().detach().numpy()
 
     def value_estimator(state: np.ndarray) -> float:
         """

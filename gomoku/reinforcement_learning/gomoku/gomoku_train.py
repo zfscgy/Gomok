@@ -29,7 +29,7 @@ class GomokuTrainer:
         for _ in range(n):
             initial_game = self.game.clone()
 
-            data_list.append(play_one_game(initial_game, self.simulations_per_step))
+            data_list.append(play_one_game(initial_game, self.simulations_per_step)[0])
 
         states = np.array([data[0] for data in data_list])
         action_probs = np.array([data[1] for data in data_list])

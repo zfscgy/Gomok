@@ -3,14 +3,13 @@ import numpy as np
 class GomoBoard:
     def __init__(self, board_size: int=15):
         self.board_size = board_size  # 棋盘大小
-        self.board = np.zeros((board_size, board_size), dtype=np.int8)  # 0 表示空，1 表示黑棋，-1 表示白棋
         self.current_player = 1  # 1 为黑棋，-1 为白棋
         self.winner = None  # 胜者（1 或 -1），None 表示未分胜负
-        self.history = []
+        self.history = [np.zeros((board_size, board_size), dtype=np.int8)]
 
     def reset(self):
         """重置棋盘"""
-        self.board -= self.board  
+        self.history = self.history[:1]  
         self.current_player = 1
         self.winner = None
 
@@ -21,10 +20,11 @@ class GomoBoard:
         :param y: 落子列
         :return: 是否成功落子
         """
-        if self.board[x, y] != 0 or self.winner is not None:
+        board = self.history[-1].copy()
+        if board[x, y] != 0 or self.winner is not None:
             return False  # 如果位置已被占用或者已有胜者，不能落子
-        self.board[x, y] = self.current_player
-        self.history.append(self.board.copy()) 
+        board[x, y] = self.current_player
+        self.history.append(board) 
         
         if self.check_winner(x, y):
             self.winner = self.current_player  # 更新胜者
@@ -35,11 +35,15 @@ class GomoBoard:
         return self.history[index]
     
     def undo(self):
-        if len(self.history) == 0:
+        if len(self.history) == 1:
             return False
-        self.board = self.history.pop()
+        self.history.pop()
         self.current_player = - self.current_player
         return True
+
+    def jump_to(self, index: int):
+        self.history = self.history[:index]
+        
 
     def check_winner(self, x: int, y: int):
         """
@@ -53,13 +57,13 @@ class GomoBoard:
             count = 1  # 包括自己
             for step in range(1, 5):  # 向正方向延伸
                 nx, ny = x + step * dx, y + step * dy
-                if 0 <= nx < self.board_size and 0 <= ny < self.board_size and self.board[nx, ny] == self.current_player:
+                if 0 <= nx < self.board_size and 0 <= ny < self.board_size and self.get_board()[nx, ny] == self.current_player:
                     count += 1
                 else:
                     break
             for step in range(1, 5):  # 向反方向延伸
                 nx, ny = x - step * dx, y - step * dy
-                if 0 <= nx < self.board_size and 0 <= ny < self.board_size and self.board[nx, ny] == self.current_player:
+                if 0 <= nx < self.board_size and 0 <= ny < self.board_size and self.get_board()[nx, ny] == self.current_player:
                     count += 1
                 else:
                     break
