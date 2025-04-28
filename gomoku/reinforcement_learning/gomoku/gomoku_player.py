@@ -15,8 +15,8 @@ def get_gomoku_player(board_size: int) -> IntuitivePlayer:
         """
         Generate the policy for the given board.
         """
-
-        state = torch.from_numpy(state)[None, None, :, :]
+        device = next(model.parameters()).device
+        state = torch.from_numpy(state)[None, None, :, :].float().to(device)
         action_probs = torch.softmax(model(state)[0], dim=0) * (state == 0).float()  # (state == 0) 表示未落子位置
         return action_probs.flatten().detach().numpy()
 
@@ -24,7 +24,8 @@ def get_gomoku_player(board_size: int) -> IntuitivePlayer:
         """
         Estimate the value of the given board.
         """
-        state = torch.from_numpy(state)[None, None, :, :]
+        device = next(model.parameters()).device
+        state = torch.from_numpy(state)[None, None, :, :].float().to(device)
         return model(state)[1].detach().numpy()
 
     gomoku_player = IntuitivePlayer(policy_generator, value_estimator)

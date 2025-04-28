@@ -3,6 +3,18 @@ import numpy as np
 
 
 class TwoPlayerEnv:
+    def get_current_player_id(self) -> int:
+        """
+        Return: the id of the current player. Usually, the id is 1 or -1.
+        """
+        raise NotImplementedError()
+    
+    def get_current_action(self) -> Any:
+        """
+        Return: the action of the current player.
+        """
+        raise NotImplementedError()
+
     def get_current_state(player_id: int = 1) -> Tuple[np.ndarray, int]:
         """
         Return: the state in the player_id's perspective
@@ -36,6 +48,12 @@ class TwoPlayerEnv:
     def clone(self):
         """
         Clone the environment. This is useful for Monte Carlo Tree Search (MCTS) to simulate future states.
+        """
+        raise NotImplementedError()
+
+    def trim_history(self):
+        """
+        Delete the history and only preserve the current state.
         """
         raise NotImplementedError()
 
