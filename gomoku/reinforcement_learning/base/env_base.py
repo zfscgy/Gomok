@@ -3,21 +3,27 @@ import numpy as np
 
 
 class TwoPlayerEnv:
-    def get_current_player_id(self) -> int:
+    def action_space(self) -> list:
         """
-        Return: the id of the current player. Usually, the id is 1 or -1.
-        """
-        raise NotImplementedError()
-    
-    def get_current_action(self) -> Any:
-        """
-        Return: the action of the current player.
+        Get the action space (including the invalid actions).
         """
         raise NotImplementedError()
 
-    def get_current_state(player_id: int = 1) -> Tuple[np.ndarray, int]:
+    def get_next_player_id(self) -> int:
         """
-        Return: the state in the player_id's perspective
+        Return: the id of the next player. Usually, the id is 1 or -1.
+        """
+        raise NotImplementedError()
+
+    def get_last_action(self) -> Any:
+        """
+        Return: the action of the last player.
+        """
+        raise NotImplementedError()
+
+    def get_state_for_next_player(self) -> Tuple[np.ndarray, int]:
+        """
+        Return: the state in the next player's perspective
         """
         raise NotImplementedError()
     

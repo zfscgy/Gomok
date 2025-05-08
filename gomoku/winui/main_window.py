@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Union, Optional
 import numpy as np
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QGraphicsEllipseItem, QMessageBox, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QSlider, QLabel
@@ -188,7 +188,7 @@ class GomokuUI(QMainWindow):
         if x < 0 or x >= self.board.board_size or y < 0 or y >= self.board.board_size:
             return
 
-        if self.board.get_current_player() == -1:  # 注意到current_player表示的是上一步的，不是这一步的
+        if self.board.get_player() == -1:  # 注意到current_player表示的是上一步的，不是这一步的
             color = QColor(0, 0, 0, 100)
         else:
             color = QColor(255, 255, 255, 100)
@@ -272,20 +272,55 @@ class GomokuUI(QMainWindow):
 
         self.replay_step_label.setText(f"当前步数：{self.current_step} / {len(self.board.history) - 1}")
         board = self.board.get_board(self.current_step)
+        
+        # Get the last 5 moves
+        last_5_moves = []
+        if self.current_step == -1:
+            last_5_moves = self.board.history[1:][-5:]
+        else:
+            last_5_moves = self.board.history[1:][max(0, self.current_step-4):self.current_step+1]
+        
+        # Create a dictionary mapping coordinates to move numbers
+        move_numbers = dict()
+        for idx, (_, (x, y), _) in enumerate(last_5_moves):
+            move_numbers[(x, y)] = len(self.board.history) - len(last_5_moves) + idx
+
         for i in range(self.board.board_size):
             for j in range(self.board.board_size):
                 if board[i, j] == 1:  # 黑棋
-                    self.pawns.append(self.draw_piece(i, j, Qt.black))
+                    self.pawns.append(self.draw_piece(i, j, Qt.black, move_numbers.get((i, j))))
                 elif board[i, j] == -1:  # 白棋
-                    self.pawns.append(self.draw_piece(i, j, Qt.white))
+                    self.pawns.append(self.draw_piece(i, j, Qt.white, move_numbers.get((i, j))))
 
-    def draw_piece(self, x: float, y: float, color: tuple):
+    def draw_piece(self, x: float, y: float, color: tuple, move_number: Optional[int] = None):
         """绘制棋子"""
         ellipse = QRectF(
-            (x + 0.5) * self.cell_size - self.display_args["pawn_size"] / 2, (y + 0.5) * self.cell_size - self.display_args["pawn_size"] / 2,
-            self.display_args["pawn_size"], self.display_args["pawn_size"],
+            (x + 0.5) * self.cell_size - self.display_args["pawn_size"] / 2, 
+            (y + 0.5) * self.cell_size - self.display_args["pawn_size"] / 2,
+            self.display_args["pawn_size"], 
+            self.display_args["pawn_size"],
         )
-        return self.scene.addEllipse(ellipse, QPen(Qt.black), QBrush(color))
+        piece = self.scene.addEllipse(ellipse, QPen(Qt.black), QBrush(color))
+        
+        if move_number is not None:
+            text = self.scene.addText(str(move_number))
+            text.setDefaultTextColor(Qt.red)
+            font = text.font()
+            font.setPointSize(self.cell_size * 0.3)
+            text.setFont(font)
+            
+            # Center the text on the piece
+            text_width = text.boundingRect().width()
+            text_height = text.boundingRect().height()
+            text_x = (x + 0.5) * self.cell_size - text_width / 2
+            text_y = (y + 0.5) * self.cell_size - text_height / 2
+            text.setPos(text_x, text_y)
+            
+            # Group the piece and text together
+            group = self.scene.createItemGroup([piece, text])
+            return group
+ 
+        return piece
 
 
 if __name__ == "__main__":

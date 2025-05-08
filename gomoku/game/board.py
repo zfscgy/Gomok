@@ -4,7 +4,7 @@ class GomoBoard:
     def __init__(self, board_size: int=15):
         self.board_size = board_size  # 棋盘大小
         self.winner = None  # 胜者（1 或 -1），None 表示未分胜负
-        self.history = [(np.zeros((board_size, board_size), dtype=np.int8), None, -1)]
+        self.history = [(np.zeros((board_size, board_size), dtype=np.int8), None, -1)]  # [棋盘状态、上个落子、上个落子玩家]
 
     def reset(self):
         """重置棋盘"""
@@ -40,13 +40,13 @@ class GomoBoard:
                 count = 1  # 包括自己
                 for step in range(1, 5):  # 向正方向延伸
                     nx, ny = x + step * dx, y + step * dy
-                    if 0 <= nx < self.board_size and 0 <= ny < self.board_size and self.get_board()[nx, ny] == self.get_current_player():
+                    if 0 <= nx < self.board_size and 0 <= ny < self.board_size and self.get_board()[nx, ny] == self.get_player():
                         count += 1
                     else:
                         break
                 for step in range(1, 5):  # 向反方向延伸
                     nx, ny = x - step * dx, y - step * dy
-                    if 0 <= nx < self.board_size and 0 <= ny < self.board_size and self.get_board()[nx, ny] == self.get_current_player():
+                    if 0 <= nx < self.board_size and 0 <= ny < self.board_size and self.get_board()[nx, ny] == self.get_player():
                         count += 1
                     else:
                         break
@@ -58,9 +58,12 @@ class GomoBoard:
     def get_board(self, index: int = -1):
         return self.history[index][0]
 
-    def get_current_player(self):
-        return self.history[-1][2]
+    def get_player(self, index: int = -1):
+        return self.history[index][2]
     
+    def get_action(self, index: int = -1):
+        return self.history[index][1]
+
     def undo(self):
         if len(self.history) == 1:
             return False

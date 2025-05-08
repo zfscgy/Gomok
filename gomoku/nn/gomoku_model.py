@@ -11,10 +11,14 @@ class GomokuModel(nn.Module):
         self.board_size = board_size
         self.n_actions = n_actions
 
+
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1)
         self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
-        self.fc1 = nn.Linear(128 * (board_size // 4) * (board_size // 4), 1024)
+
+
+        last_size = ((board_size + 1) // 2 + 1) // 2
+        self.fc1 = nn.Linear(128 * last_size * last_size, 1024)
         
         self.output_actions = nn.Linear(1024, n_actions)
         self.output_value = nn.Linear(1024, 1)
@@ -29,4 +33,4 @@ class GomokuModel(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
 
-        return self.output_actions(x), self.output_value(x)
+        return self.output_actions(x), torch.tanh(self.output_value(x))
